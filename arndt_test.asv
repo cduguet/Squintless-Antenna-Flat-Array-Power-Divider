@@ -1,0 +1,277 @@
+% Power distribution using Arndt algorithm
+% Cristian Duguet S.
+% 2009-12-21
+
+clc
+clear all;
+close all;
+
+%B: outputs
+%A: inputs
+%ST: Scattering matrix of the symmetrical T-junction
+%SUT:  Scattering matrix of the unssymmetrical T-junction
+
+%----------------------------Constants------------------------------------%
+eps0=8.854187817e-12;
+mu0=4*pi*10^-7;
+
+%Permeability and Permitivity
+epsr=1; mur=1; 
+eps=eps0*epsr; 
+mu=mu0*mur;
+%----------------------Waveguide sizes------------------------------------%
+% 3 zones of the unsymmetrical T-junction
+
+%          |    |
+%          |bIII|
+% _________|    |__________
+%                 bII
+%      bI        __________
+% ______________|
+% 
+
+%Waveguide width
+a=15.799e-3;
+
+%Height values
+b(1)=a/2; 
+b(2)=4.41e-3;
+% b(2)=b(1);
+b(3)=4.38e-3;              
+
+% element counter
+o=0;
+%frequency of analysis
+for f=10e9:.5e9:18e9
+    o=o+1;
+    omega=2*pi*f;
+    %wave number
+    k= omega*sqrt(mu*eps);
+    
+    %% -------------------ST MATRIX CALCULATION---------------------------%
+    for n = 0:4
+        for p=n
+            %------ We'll use TE_xn mode in I and TE_xp mode in III ------%
+    
+            %          |/\/\|
+            %          |  p |
+            % _________|    |__________
+            %      /           \
+            %    n \           / n
+            % _____/___________\_______
+            
+            %Shear wave number, (for each mode)
+            kx= pi/a;           %mode 1 ,x dependent, TE1_
+            kq(1)= n*pi./b(1);  %mode n , q dependent, TE1n
+            kq(2)= kq(1);
+            kq(3)= p*pi./b(3);  %mode p , q dependent, TE1n
+            
+            kc = sqrt(kx^2 + kq.^2);    %<-- 3-element vector (Shear wave number in I, II and III)
+            
+            
+            %phase constant
+            beta = sqrt(k^2 - kc.^2);
+            beta(k^2 < kc.^2) = -1* beta(k^2 < kc.^2);   % 3-element vector
+            
+            
+            %Impedance
+            ZF = omega*mu./beta;          %3-element vector
+            
+            %Admitance
+            Y = ZF.^(-1)                  %3-element vector
+            
+            
+            %Diagonal Matrix e
+            e=zeros(1,3);                 %3-element vector
+            e(1)=exp(1i*beta(1)*b(3));
+            e(3)=exp(1i*beta(3)*b(1));
+            
+            
+            y1 = b(1)/2;
+            z1 = b(3)/2;
+            
+            %T Matrix, first element
+            T(1) = 1/sqrt(y1*z1) * sin(beta(1)*2*z1)/sin(beta(3)*2*y1) * beta(1)/beta(3) * 1/sqrt(1+isequal(n,0)) *  1/sqrt(1+isequal(p,0)); %% me salta una duda, es beta(3)*2*z1?? o *y1???
+            %multiplicado por la integral
+            T(1)=T(1) * ((n*pi/2/y1)*sin(n*pi) - beta(3)*sin(beta(3)*2*y1)) / ((n*pi/2/y1)^2 - (beta(3))^2);
+            %INTEGRAL OK
+            
+            %T Matrix, second element
+            T(2) = T(1)*(-1)^n;  %% should it be the same power as T(4)?? p or n?
+            
+            %T Matrix, third element
+            T(3) = 1/sqrt(y1*z1) * sin(beta(3)*2*y1)/sin(beta(1)*2*z1) * beta(3)/beta(1) * 1/sqrt(1+isequal(n,0)) *  1/sqrt(1+isequal(p,0));
+            %multiplicado por la integral
+            T(3)=T(3) * ((p*pi/2/z1)*sin(p*pi) - beta(1)*sin(beta(1)*2*z1)) / ((p*pi/2/z1)^2 - (beta(1))^2);
+            
+            %Matrix T, fourth element
+            T(4) = T(3) * (-1)^p;
+            
+            
+            %Simmetric T-junction Matrix
+            STaux(:,:,n+1)= [ -e(1)*Y(1)    Y(1)    -T(1)* Y(3);
+                                Y(1)    -e(1)*Y(1)   T(2)* Y(3);
+                             -T(3)*Y(1) T(4)*Y(1)   -e(3)*Y(3)];
+            
+            STaux(:,:,n+1) = STaux(:,:,n+1) \ [ (1/e(1))*Y(1)       -Y(1)          T(1)* Y(3);
+                                                    -Y(1)       (1/e(1))*Y(1)     -T(2)* Y(3);
+                                                  T(3)*Y(1)      -T(4)*Y(1)     (1/e(3))*Y(3)];
+ 
+        end
+    end
+    %sum of all the modes calculated
+    
+    %weigth of each mode-pair copling coeffiecient
+    pond = exp(-2*[0:n]) %they decay exponentially
+   
+%     pond= [1 0 0 0 0 ];
+    pond=pond/sum(pond);    %normalize them?
+    
+    ST=0;
+    for i=1:length(pond) ST= ST+STaux(:,:,i)*pond(i); end
+        
+    STdb = mag2db(abs(ST));
+    
+    clear beta kq kc ZF Y
+    
+    %---------------------------------------------------------------------%
+    %---------------------------------------------------------------------%
+    %% -------------------SH MATRIX CALCULATION---------------------------%
+
+    for m =0:4
+        for n =m
+            %----- We'll use TE_xm mode in IIa and TE_xn mode in  V ------% 
+            
+            %    _____________________________
+            %          \            / n
+            %      m   /      ______\_________
+            %    ______\_____|
+
+            
+            %Shear wave number, (for each mode)
+            kx= pi/a;      %mode 1 ,x dependent, TE1_
+            kq(1)= m*pi./b(1);  %mode m , q dependent, TE1n       IN
+            kq(2)= n*pi./b(2);  %mode n , q dependent, TE1n      OUT
+
+            kc = sqrt(kx^2 + kq.^2);    %<-- 2-element vector (Shear wave number in I and II)
+
+            %phase constant
+            beta = sqrt(k^2 - kc.^2);      
+            beta(k^2 < kc.^2) = -1i* beta(k^2 < kc.^2);   % 2-element vector
+
+            %Impedance
+            ZF = omega*mu./beta;                %-element vector
+
+            %Admitance
+            Y = ZF.^(-0.5);                     %3-element vector
+
+            %depends on b(i+1)
+            K1 = 1/sqrt(1+isequal(m,0)) *  1/sqrt(1+isequal(n,0)) * 2/sqrt((2*y1)*(b(2)));
+
+            %times the itegral
+            if m==0 && n==0
+              K1 = K1 * b(2);
+            elseif m==0
+              K1 = K1 * sin(n*pi) * b(2) / (n*pi);
+            elseif n==0
+              K1 = K1 * (sin(m*pi) - sin(m*pi*(b(1)-b(2))/b(1)))* b(1)/(m*pi);
+            else
+              K1 = K1 * ( (m*pi/b(1))*sin(m*pi)*cos(n*pi) - (n*pi/b(2))*sin(n*pi)*cos(m*pi) - (m*pi/b(1))*sin(m*pi*(b(1)-b(2))/b(1)) ) / ( (m*pi/b(1))^2 - (n*pi/b(2))^2 );
+            end;
+
+            K2=transpose(K1); %transposed
+
+            %diagonal matrices sqrtY 
+            %Phase constant is the same between IIa and  I, and between  V and II:
+            sqrtYm = Y(1);
+            sqrtYn = Y(2);
+
+            betam=beta(1);
+            betan=beta(2);
+            %-----------------------------%
+
+            SHaux(1,1,m+1) =          ( sqrtYm * betam^(-1) * (K1*sqrtYm)^(-1) * sqrtYm +  K2 * betan^(-1) *sqrtYn )^(-1);
+            SHaux(1,1,m+1) = SHaux(1,1,m+1) *(-sqrtYm * betam^(-1) * (K1*sqrtYm)^(-1) * sqrtYm +  K2 * betan^(-1) *sqrtYn );
+
+            SHaux(1,2,m+1) =        2*( sqrtYm * betam^(-1) * (K1*sqrtYm)^(-1) * sqrtYm +  K2 * betan^(-1) *sqrtYn )^(-1) * sqrtYm * betam^(-1);
+
+            SHaux(2,1,m+1) = 2*(  K1*sqrtYm  +  sqrtYn *(K2 * betan^(-1) *sqrtYn )^(-1) * sqrtYm *betam^(-1)  )^(-1) * sqrtYn;
+
+            SHaux(2,2,m+1) =          (  K1*sqrtYm  +  sqrtYn *(K2 * betan^(-1) *sqrtYn )^(-1) * sqrtYm *betam^(-1)  )^(-1);
+            SHaux(2,2,m+1) = SHaux(2,2,m+1) *( -K1*sqrtYm  +  sqrtYn *(K2 * betan^(-1) *sqrtYn )^(-1) * sqrtYm *betam^(-1)  );
+
+            %------------------------------%
+        end
+    end
+   %sum of all the modes calculated
+    
+    %weigth of each mode-pair copling coeffiecient
+    pond = exp(-2*[0:m]) %they decay exponentially
+   
+%     pond= [1 0 0 0 0 ];
+    pond=pond/sum(pond);    %normalize them?  
+    
+    SH=0;
+    for v=1:length(pond) SH= SH+SHaux(:,:,v)*pond(v); end
+    
+    SHdb= mag2db(abs(SH));
+    %---------------------------------------------------------------------%
+    %---------------------------------------------------------------------%
+    
+    %% -------------TOTAL MODAL SCATTERING MATRIX-------------------------%
+
+
+    M1 = (ones(1) - ST(2,2)* SH(1,1))^(-1);
+    M2 = SH(1,1)*M1;
+    M3 = SH(2,1)*M1;
+    M4 = ST(2,2)*SH(1,2);
+    %-------------------------------%
+    SUT(o,1,1) = ST(1,1)+ ST(1,2)*M2*ST(2,1);
+    SUT(o,2,1) = M3*ST(2,1);
+    SUT(o,3,1) = ST(3,1)+ ST(3,2)*M2*ST(2,1);
+%     SUT(o,1,1) = ST(1,1)/(f/11e9)+ ST(1,2)*M2*ST(2,1)*f/11e9;
+%     SUT(o,2,1) = M3*ST(2,1);
+%     SUT(o,3,1) = ST(3,1) *(f/11e9)^0.5 + ST(3,2)*M2*ST(2,1);
+
+    SUT(o,1,2) = ST(1,2)*SH(1,2) + ST(1,2)*M2*M4;
+    SUT(o,1,3) = ST(1,3) + ST(1,2)*M2*ST(2,3);
+    SUT(o,2,2) = SH(2,2) +M3*M4;
+    SUT(o,2,3) = M3*ST(2,3);
+    SUT(o,3,2) = ST(3,2)*SH(1,2) + ST(3,2)*M2*M4;
+    SUT(o,3,3) = ST(3,3) + ST(3,2)*M2*ST(2,3);
+    
+end
+SUTdB=mag2db(abs(SUT));
+
+freq = 10:.5:16;
+s11 = [-29.586039 -29.317956 -32.413265 -37.012861 -37.209029 -31.812850 -27.553865 -24.317514 -21.684441 -19.432421 -17.434651 -15.613565 -13.919435 -12.320532 -10.798725 -9.347511 -7.970104];
+    
+
+
+%Variación de Valores dependiendo del step o el mesh simulation
+% s21 = [-2.821004 -2.905269 -2.876396 -2.813972 -2.751084 -2.689417 -2.626774 -2.562317 -2.496345 -2.429624 -2.363711 -2.300775 -2.243744 -2.196838 -2.166497 -2.162548 -2.199255];
+% s21 = [-2.913054 -2.898496 -2.857597 -2.806131 -2.749507 -2.689450 -2.626774 -2.562215 -2.496893 -2.432625 -2.372135 -2.319198 -2.278679];
+% s21 = [-3.020781 -2.912594 -2.858067 -2.805238 -2.748866 -2.689137 -2.626763 -2.562310 -2.496294 -2.429427 -2.362909 -2.298714 -2.239919 -2.191087 -2.158802 -2.152509 -2.185866];
+s21 = [-2.963696 -2.913711 -2.861366 -2.806502 -2.749066 -2.689106 -2.626774 -2.562349 -2.496294 -2.429354 -2.362731 -2.298332 -2.239154 -2.189810 -2.157253 -2.151721 -2.187890]; 
+
+% s31 = [-3.274481 -3.145905 -3.175725 -3.228926 -3.290462 -3.363315 -3.447845 -3.546469 -3.663499 -3.802332 -3.968078 -4.168246 -4.413719 -4.720077 -5.109236 -5.611093 -6.264045]; 
+s31 = [-3.073984 -3.118983 -3.169236 -3.225822 -3.290011 -3.363361 -3.447845 -3.546030 -3.661310 -3.798214 -3.962827 -4.163347 -4.410854 -4.720376 -5.112358 -5.614577 -6.264282];
+
+%Valores de la Juntura T Simétrica
+% s11 = [-11.802004 -13.171596 -13.549165 -13.726761 -13.873023 -14.026149 -14.192591 -14.375299 -14.577051 -14.800989 -15.051028 -15.332400 -15.652486 -16.022157 -16.458015 -16.986203 -17.648914];
+% s21 = [-2.268943 -2.076560 -2.024414 -1.987648 -1.948866 -1.906180 -1.859887 -1.810056 -1.756329 -1.698146 -1.634916 -1.565980 -1.490385 -1.406601 -1.312335 -1.204588 -1.080001];
+% s31 = [-4.673838 -4.790045 -4.835782 -4.882928 -4.940664 -5.007524 -5.082592 -5.166584 -5.261163 -5.368403 -5.490775 -5.631609 -5.795925 -5.991581 -6.230809 -6.532417 -6.925324];
+
+figure(1)
+plot(freq,SUTdB(1:16,1,1),freq,s11);legend('S_1_1 Arndt','S_1_1 simulado'); xlabel('freq [GHz]'); ylabel('[dB]'); title('Reflexión')
+
+
+figure(2)
+plot(freq,mag2db(abs(SUT(:,2,1))),freq,mag2db(abs(SUT(:,3,1))),freq,s21,'.-',freq,s31,'.-');
+legend('S_2_1 Arndt','S_3_1 Arndt', 'S_2_1 simulado','S_3_1 simulado'); 
+title('Parametros S obtenidos con Algoritmo Arndt'); xlabel('freq [GHz]'); ylabel('[dB]');
+
+% figure(3)
+% plot(freq,rad2deg(angle(SUT(:,2,1))),freq,rad2deg(angle(SUT(:,3,1))));legend('S_2_1','S_3_1');
+
+

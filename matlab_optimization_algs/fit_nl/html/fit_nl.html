@@ -1,0 +1,342 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>fit_nl</title>
+      <meta name="generator" content="MATLAB 7.6">
+      <meta name="date" content="2008-07-22">
+      <meta name="m-file" content="fit_nl"><style>
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head>
+   <body>
+      <div class="content"><pre class="codeinput"><span class="keyword">function</span> [x, resnorm] = fit_nl(model, x0, xdata, ydata, fixed, lb, ub, opt)
+<span class="comment">% Extends lsqcurvefit to incorporate built-in functions and fixed parameters.</span>
+<span class="comment">%</span>
+<span class="comment">% This function mainly calls the function lsqcurvefit from the Optimization</span>
+<span class="comment">% toolbox. For supporting automatic operations all Warnings or Display</span>
+<span class="comment">% outputs of lsqcurvefit are suppressed. Additionally parameters can</span>
+<span class="comment">% be set as fixed.</span>
+<span class="comment">%</span>
+<span class="comment">% Syntax</span>
+<span class="comment">%   function [x, resnorm] = fit_nl(model, x0, xdata, ydata, fixed, lb, ub, opt)</span>
+<span class="comment">%</span>
+<span class="comment">% Input parameters</span>
+<span class="comment">%   model   Defines the function which is used for the fit. This is either</span>
+<span class="comment">%           a keyword for built-in functions (see fit_func.m) or a function</span>
+<span class="comment">%           pointer to a function equivalent to fun used in lsqcurvefit,</span>
+<span class="comment">%           i.d. function F = myfun(x, xdata)</span>
+<span class="comment">%   x0      The initial guess for the model parameter to be estimated.</span>
+<span class="comment">%           For the nubmer of meaning of parameter for the built-in</span>
+<span class="comment">%           functions, see fit_func.m</span>
+<span class="comment">%   xdata   Input data for the model function/ indepedent variables.</span>
+<span class="comment">%           For the xdata which is required by the built-in functions see</span>
+<span class="comment">%           fit_func.m</span>
+<span class="comment">%   ydata   Output data to be matched by the model function</span>
+<span class="comment">%</span>
+<span class="comment">%   [optional parameters]</span>
+<span class="comment">%   fixed   Array of 0 or 1 determining which parameters should stay fixed</span>
+<span class="comment">%           in the fitting process.</span>
+<span class="comment">%           default: set to zeros(size(x0) - no fixed parameter</span>
+<span class="comment">%           Even if some parameter are set fixed the model function still</span>
+<span class="comment">%           should take all parameter (including the fixed).</span>
+<span class="comment">%   lb      Lower bound for x</span>
+<span class="comment">%           default: set to -Infinity</span>
+<span class="comment">%   ub      Upper bound for x</span>
+<span class="comment">%           default: set to +Infinity</span>
+<span class="comment">%   opt     the options which can be forwarded to lsqcurvefit</span>
+<span class="comment">%           default: all warnings and printing will be suppressed</span>
+<span class="comment">%   Simply pass [], if you want any of these options to be set to default</span>
+<span class="comment">%   values.</span>
+<span class="comment">%</span>
+<span class="comment">% Output parameters</span>
+<span class="comment">%   x       Resulting paramters that minimize the distance between model</span>
+<span class="comment">%           and ydata</span>
+<span class="comment">%   resnorm Quadratic norm of (model(x, xdata) - ydata)</span>
+<span class="comment">%</span>
+<span class="comment">% Comment</span>
+<span class="comment">%   This is a least squares fitting. So the error should be distributed</span>
+<span class="comment">%   according to a Gaussian distribution around the true curves. Linear</span>
+<span class="comment">%   parameters can also be fitted, but the algorithm will than be slower</span>
+<span class="comment">%   than standard regression. N-D function can be given in the model and</span>
+<span class="comment">%   will be linearized internally.</span>
+
+<span class="comment">% parameter checking and setting to default values</span>
+
+<span class="comment">% need at least 4 parameter</span>
+<span class="keyword">if</span> nargin &lt; 4
+    error(<span class="string">'Not enough arguments given!'</span>);
+<span class="keyword">end</span>
+
+x0    = double(x0); <span class="comment">% lsqcurvefit needs double input</span>
+ydata = double(ydata);
+
+s = warning(<span class="string">'query'</span>, <span class="string">'all'</span>); <span class="comment">% save state of warnings</span>
+
+<span class="comment">% the last 4 parameters can be set to default values</span>
+<span class="comment">% if values are set they are check for equal size</span>
+<span class="keyword">if</span> nargin &lt; 8, opt = [];
+    <span class="keyword">if</span> nargin &lt; 7, ub = [];
+        <span class="keyword">if</span> nargin &lt; 6, lb = [];
+            <span class="keyword">if</span> nargin &lt; 5, fixed = [];
+            <span class="keyword">end</span>, <span class="keyword">end</span>, <span class="keyword">end</span>, <span class="keyword">end</span>
+<span class="keyword">if</span> isempty(opt)
+    <span class="comment">% no options given, standard is to set Display to off and shutdown</span>
+    <span class="comment">% warnings so that automatic fitting is facilitated</span>
+    opt = optimset(<span class="string">'Display'</span>,<span class="string">'off'</span>);
+    warning(<span class="string">'off'</span>, <span class="string">'all'</span>);
+<span class="keyword">end</span>
+<span class="keyword">if</span> isempty(ub)
+    ub = zeros(size(x0)) + Inf;
+<span class="keyword">end</span>
+<span class="keyword">if</span> isempty(lb)
+    lb = zeros(size(x0)) - Inf;
+<span class="keyword">end</span>
+<span class="keyword">if</span> isempty(fixed)
+    fixed = zeros(size(x0));
+<span class="keyword">end</span>
+<span class="keyword">if</span> size(fixed) ~= size(x0) | size(lb) ~= size(x0) | size(ub) ~= size(x0)
+    error(<span class="string">'Parameter x0, fixed, lb and ub have not same size!'</span>);
+<span class="keyword">end</span>
+
+<span class="comment">% assemble 'global' struct accessible from subfunction F</span>
+p = [];
+p.fix = fixed;  <span class="comment">% fixed parameters</span>
+p.x   = x0;     <span class="comment">% initial parameters (needed for knowing which are fixed)</span>
+p.fun = model;  <span class="comment">% the model function (either keyword or function pointer)</span>
+
+<span class="comment">% reduce x0 to parameters not fixed (also lb and ub)</span>
+x0 = x0(fixed == 0);
+lb = lb(fixed == 0);
+ub = ub(fixed == 0);
+
+<span class="comment">% the call for the internal Matlab function</span>
+[x, resnorm] = lsqcurvefit(@F, x0, xdata, ydata, lb, ub, opt);
+
+<span class="comment">% mix fixed parameters in again</span>
+p.x(fixed == 0) = x;
+x = p.x;
+
+<span class="comment">% restore warning settings</span>
+warning(s);
+
+<span class="comment">% functions ---------------------------------------------------------------</span>
+
+    <span class="keyword">function</span> y = F(x, xdata)
+        <span class="comment">% Computes the output of a possible n-D function for given</span>
+        <span class="comment">% parameters x and xdataset xdata while fixed parameters which are</span>
+        <span class="comment">% defined in the global variable p are included. The function is</span>
+        <span class="comment">% defined by p.m in connection with function fit_func().</span>
+
+        <span class="comment">% first mix fixed and variable parameters</span>
+        h = x;
+        x = p.x;
+        x(p.fix == 0) = h;
+
+        <span class="comment">% calculate the function (external/built-in)</span>
+        y = fit_func(p.fun, x, xdata);
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Error using ==&gt; fit_nl at 56
+Not enough arguments given!
+
+Error in ==&gt; fit_nl at 56
+    error('Not enough arguments given!');
+
+</pre><p class="footer"><br>
+            Published with MATLAB&reg; 7.6<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+function [x, resnorm] = fit_nl(model, x0, xdata, ydata, fixed, lb, ub, opt)
+% Extends lsqcurvefit to incorporate built-in functions and fixed parameters.
+%
+% This function mainly calls the function lsqcurvefit from the Optimization
+% toolbox. For supporting automatic operations all Warnings or Display
+% outputs of lsqcurvefit are suppressed. Additionally parameters can
+% be set as fixed.
+%
+% Syntax
+%   function [x, resnorm] = fit_nl(model, x0, xdata, ydata, fixed, lb, ub, opt)
+%
+% Input parameters
+%   model   Defines the function which is used for the fit. This is either
+%           a keyword for built-in functions (see fit_func.m) or a function
+%           pointer to a function equivalent to fun used in lsqcurvefit,
+%           i.d. function F = myfun(x, xdata)
+%   x0      The initial guess for the model parameter to be estimated.
+%           For the nubmer of meaning of parameter for the built-in
+%           functions, see fit_func.m
+%   xdata   Input data for the model function/ indepedent variables.
+%           For the xdata which is required by the built-in functions see
+%           fit_func.m
+%   ydata   Output data to be matched by the model function
+%
+%   [optional parameters]
+%   fixed   Array of 0 or 1 determining which parameters should stay fixed
+%           in the fitting process.
+%           default: set to zeros(size(x0) - no fixed parameter
+%           Even if some parameter are set fixed the model function still
+%           should take all parameter (including the fixed).
+%   lb      Lower bound for x
+%           default: set to -Infinity
+%   ub      Upper bound for x
+%           default: set to +Infinity
+%   opt     the options which can be forwarded to lsqcurvefit
+%           default: all warnings and printing will be suppressed
+%   Simply pass [], if you want any of these options to be set to default
+%   values.
+%
+% Output parameters
+%   x       Resulting paramters that minimize the distance between model
+%           and ydata
+%   resnorm Quadratic norm of (model(x, xdata) - ydata)
+%
+% Comment
+%   This is a least squares fitting. So the error should be distributed
+%   according to a Gaussian distribution around the true curves. Linear
+%   parameters can also be fitted, but the algorithm will than be slower
+%   than standard regression. N-D function can be given in the model and
+%   will be linearized internally.
+
+% parameter checking and setting to default values
+
+% need at least 4 parameter
+if nargin < 4
+    error('Not enough arguments given!');
+end
+
+x0    = double(x0); % lsqcurvefit needs double input
+ydata = double(ydata);
+
+s = warning('query', 'all'); % save state of warnings
+
+% the last 4 parameters can be set to default values
+% if values are set they are check for equal size
+if nargin < 8, opt = [];
+    if nargin < 7, ub = [];
+        if nargin < 6, lb = [];
+            if nargin < 5, fixed = [];
+            end, end, end, end
+if isempty(opt)
+    % no options given, standard is to set Display to off and shutdown
+    % warnings so that automatic fitting is facilitated
+    opt = optimset('Display','off');
+    warning('off', 'all');
+end
+if isempty(ub)
+    ub = zeros(size(x0)) + Inf;
+end
+if isempty(lb)
+    lb = zeros(size(x0)) - Inf;
+end
+if isempty(fixed)
+    fixed = zeros(size(x0));
+end
+if size(fixed) ~= size(x0) | size(lb) ~= size(x0) | size(ub) ~= size(x0)
+    error('Parameter x0, fixed, lb and ub have not same size!');
+end
+
+% assemble 'global' struct accessible from subfunction F
+p = [];
+p.fix = fixed;  % fixed parameters
+p.x   = x0;     % initial parameters (needed for knowing which are fixed)
+p.fun = model;  % the model function (either keyword or function pointer)
+
+% reduce x0 to parameters not fixed (also lb and ub)
+x0 = x0(fixed == 0);
+lb = lb(fixed == 0);
+ub = ub(fixed == 0);
+
+% the call for the internal Matlab function
+[x, resnorm] = lsqcurvefit(@F, x0, xdata, ydata, lb, ub, opt);
+
+% mix fixed parameters in again
+p.x(fixed == 0) = x;
+x = p.x;
+
+% restore warning settings
+warning(s);
+
+% functions REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+
+    function y = F(x, xdata)
+        % Computes the output of a possible n-D function for given
+        % parameters x and xdataset xdata while fixed parameters which are
+        % defined in the global variable p are included. The function is
+        % defined by p.m in connection with function fit_func().
+
+        % first mix fixed and variable parameters
+        h = x;
+        x = p.x;
+        x(p.fix == 0) = h;
+
+        % calculate the function (external/built-in)
+        y = fit_func(p.fun, x, xdata);
+    end
+end
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

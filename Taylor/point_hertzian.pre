@@ -1,0 +1,28 @@
+**Cristian Duguet Saez
+**Distribucion de Taylor en 20 elementos.
+**SLL 30dB, n=20
+
+** Set the frequencies
+#f0=10e9         ** central frequency
+#f1=11.5e9         ** start frequency
+#f2=8.5e9         ** stop frequency
+#lambda=300e6/#f0  ** wavelength in metros
+#np=9           ** number of points in the frequency range
+
+** Set  array parameters
+**Distance between elements
+#d=0.7*#lambda
+
+** End of geometry
+EG   1    0    0                                                                                    0
+
+** Set frequency range 
+FR   #np  0                   #f1                 #f2
+
+A5   0                        1         0         0         0         0         90        90
+
+** Calculation the far field 
+FF   1    361  8    1         0         0         0.25      45
+
+** End
+EN

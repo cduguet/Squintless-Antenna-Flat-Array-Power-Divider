@@ -1,0 +1,82 @@
+**Cristian Duguet Saez
+**Distribucion de Taylor en 20 elementos.
+**SLL 30dB, n=20
+
+** Set the frequencies
+#f0=12e9         ** central frequency
+#f1=13.8e9         ** start frequency
+#f2=10.2e9         ** stop frequency
+#lambda=300e6/#f0  ** wavelength in metros
+#k=2*#pi/#lambda     **Shear wave number
+#np=9           ** number of points in the frequency range
+
+** Set  array parameters
+**Distance between elements
+**#d=0.7*#lambda
+#d=12.381618341861e-3   **d sin inclinar
+**#d=12.505446302263e-3   **d', con inclinación
+**#d=0.7*#lambda
+**Path difference (normal effect reduction)
+#delta=#lambda*0/19   ** Control the phase distance between elements
+#beta=#delta*#k*180/#pi
+
+
+** End of geometry
+EG   1    0    0                                                                                    0
+
+** Set frequency range 
+FR   #np  0                   #f1                 #f2
+
+
+** Array Elements  
+A5   0                        0.0769562 -19*#beta 0.5*#d    0         0         90        90
+A5   1                        0.0763161 -18*#beta 1.5*#d    0         0         90        90
+A5   1                        0.0751001 -17*#beta 2.5*#d    0         0         90        90
+A5   1                        0.0733814 -16*#beta 3.5*#d    0         0         90        90
+A5   1                        0.0711867 -15*#beta 4.5*#d    0         0         90        90
+A5   1                        0.0684948 -14*#beta 5.5*#d    0         0         90        90
+A5   1                        0.0652971 -13*#beta 6.5*#d    0         0         90        90
+A5   1                        0.0616603 -12*#beta 7.5*#d    0         0         90        90
+A5   1                        0.0577260 -11*#beta 8.5*#d    0         0         90        90
+A5   1                        0.0536349 -10*#beta 9.5*#d    0         0         90        90
+A5   1                        0.0494365 -9*#beta  10.5*#d   0         0         90        90
+A5   1                        0.0450761 -8*#beta  11.5*#d   0         0         90        90
+A5   1                        0.0404940 -7*#beta  12.5*#d   0         0         90        90
+A5   1                        0.0357766 -6*#beta  13.5*#d   0         0         90        90
+A5   1                        0.0312366 -5*#beta  14.5*#d   0         0         90        90
+A5   1                        0.0273345 -4*#beta  15.5*#d   0         0         90        90
+A5   1                        0.0244648 -3*#beta  16.5*#d   0         0         90        90
+A5   1                        0.0227454 -2*#beta  17.5*#d   0         0         90        90
+A5   1                        0.0219613 -1*#beta  18.5*#d   0         0         90        90
+A5   1                        0.0217194 -0*#beta  19.5*#d   0         0         90        90
+                              
+                              
+** ** Array Elements negative side 
+A5   1                        0.0769562 -19*#beta -0.5*#d   0         0         90        90
+A5   1                        0.0763161 -18*#beta -1.5*#d   0         0         90        90
+A5   1                        0.0751001 -17*#beta -2.5*#d   0         0         90        90
+A5   1                        0.0733814 -16*#beta -3.5*#d   0         0         90        90
+A5   1                        0.0711867 -15*#beta -4.5*#d   0         0         90        90
+A5   1                        0.0684948 -14*#beta -5.5*#d   0         0         90        90
+A5   1                        0.0652971 -13*#beta -6.5*#d   0         0         90        90
+A5   1                        0.0616603 -12*#beta -7.5*#d   0         0         90        90
+A5   1                        0.0577260 -11*#beta -8.5*#d   0         0         90        90
+A5   1                        0.0536349 -10*#beta -9.5*#d   0         0         90        90
+A5   1                        0.0494365 -9*#beta  -10.5*#d  0         0         90        90
+A5   1                        0.0450761 -8*#beta  -11.5*#d  0         0         90        90
+A5   1                        0.0404940 -7*#beta  -12.5*#d  0         0         90        90
+A5   1                        0.0357766 -6*#beta  -13.5*#d  0         0         90        90
+A5   1                        0.0312366 -5*#beta  -14.5*#d  0         0         90        90
+A5   1                        0.0273345 -4*#beta  -15.5*#d  0         0         90        90
+A5   1                        0.0244648 -3*#beta  -16.5*#d  0         0         90        90
+A5   1                        0.0227454 -2*#beta  -17.5*#d  0         0         90        90
+A5   1                        0.0219613 -1*#beta  -18.5*#d  0         0         90        90
+A5   1                        0.0217194 -0*#beta  -19.5*#d  0         0         90        90     
+
+
+
+** Calculation the far field 
+FF   1    901  8    1         0         0         0.1       45
+
+** End
+EN

@@ -1,0 +1,62 @@
+\relax 
+\catcode`"\active
+\catcode`<\active
+\catcode`>\active
+\@nameuse{es@quoting}
+\ifx\hyper@anchor\@undefined
+\global \let \oldcontentsline\contentsline
+\gdef \contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global \let \oldnewlabel\newlabel
+\gdef \newlabel#1#2{\newlabelxx{#1}#2}
+\gdef \newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\let \contentsline\oldcontentsline
+\let \newlabel\oldnewlabel}
+\else
+\global \let \hyper@last\relax 
+\fi
+
+\select@language{spanish}
+\@writefile{toc}{\select@language{spanish}}
+\@writefile{lof}{\select@language{spanish}}
+\@writefile{lot}{\select@language{spanish}}
+\citation{ReferenciasdeArndt10-14}
+\citation{Arndt17 y 12}
+\@writefile{toc}{\contentsline {section}{\numberline {0.1}Arndt}{3}{section.0.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Juntura T sim\IeC {\'e}trica. Potencias de entrada en cada puerto $A^{(v)}$, potencias de salida, $B^{(v)}$\relax }}{4}{figure.caption.4}}
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:teoria_arndt}{{1}{4}{Juntura T simétrica. Potencias de entrada en cada puerto $A^{(v)}$, potencias de salida, $B^{(v)}$\relax \relax }{figure.caption.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Juntura T sim\IeC {\'e}trica. Potencias de entrada en puerto $A^{(v)}$, potencias de salida, $B^{(v)}$\relax }}{4}{figure.caption.5}}
+\newlabel{fig:teoria_arndt2}{{2}{4}{Juntura T simétrica. Potencias de entrada en puerto $A^{(v)}$, potencias de salida, $B^{(v)}$\relax \relax }{figure.caption.5}{}}
+\citation{arndt15}
+\citation{arndt16}
+\citation{*}
+\bibstyle{plain}
+\bibdata{RLSAbib,zoteromaxwell}
+\citation{microondas4}
+\citation{popovic}
+\citation{popovic}
+\@writefile{toc}{\contentsline {chapter}{\numberline {A}Maxwell en gu\IeC {\'\i }as de Onda}{6}{appendix.A}}
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {section}{\numberline {A.1}Ecuaciones de Maxwell}{6}{section.A.1}}
+\newlabel{eqmaxwell}{{3a}{6}{Ecuaciones de Maxwell\relax }{equation.0.1.3a}{}}
+\newlabel{eqondatransversales}{{3g}{7}{Ecuaciones de Maxwell\relax }{equation.0.1.3g}{}}
+\newlabel{eqtransversales}{{3h}{7}{Ecuaciones de Maxwell\relax }{equation.0.1.3h}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {A.2}En una Gu\IeC {\'\i }a de onda rectangular}{8}{section.A.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {A.1}{\ignorespaces Estructura b\IeC {\'a}sica de una gu\IeC {\'\i }a de onda rectangular\relax }}{8}{figure.caption.6}}
+\newlabel{eqondacartesiana}{{3j}{8}{En una Guía de onda rectangular\relax }{equation.0.1.3j}{}}
+\newlabel{eqcomptransv}{{3m}{8}{En una Guía de onda rectangular\relax }{equation.0.1.3m}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2.1}Modos TE}{9}{subsection.A.2.1}}
+\newlabel{TEmagneticotransversal}{{3\~na}{9}{Modos TE\relax }{equation.0.1.3\penalty \@M \hskip \z@skip \unhbox \voidb@x \bgroup \let \unhbox \voidb@x \setbox \@tempboxa \hbox {n\global \mathchardef \accent@spacefactor \spacefactor }\accent 126 n\egroup \spacefactor \accent@spacefactor \penalty \@M \hskip \z@skip \setbox \@tempboxa \hbox {n\global \mathchardef \accent@spacefactor \spacefactor }\spacefactor \accent@spacefactor a}{}}
+\newlabel{TEelectricotransversal}{{3\~nb}{9}{Modos TE\relax }{equation.0.1.3\penalty \@M \hskip \z@skip \unhbox \voidb@x \bgroup \let \unhbox \voidb@x \setbox \@tempboxa \hbox {n\global \mathchardef \accent@spacefactor \spacefactor }\accent 126 n\egroup \spacefactor \accent@spacefactor \penalty \@M \hskip \z@skip \setbox \@tempboxa \hbox {n\global \mathchardef \accent@spacefactor \spacefactor }\spacefactor \accent@spacefactor b}{}}
+\newlabel{TEnroondacorte}{{3s}{10}{Modos TE\relax }{equation.0.1.3s}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2.2}Modos TM}{10}{subsection.A.2.2}}
+\newlabel{TMelectricotransversal}{{3wa}{10}{Modos TM\relax }{equation.0.1.3wa}{}}
+\newlabel{TMmagneticotransversal}{{3wb}{10}{Modos TM\relax }{equation.0.1.3wb}{}}
+\newlabel{TMaxial}{{3y}{11}{Modos TM\relax }{equation.0.1.3y}{}}
+\newlabel{TMnroondacorte}{{3\GenericError  {               }{LaTeX Error: Counter too large}{See the LaTeX manual or LaTeX Companion for explanation.}{You've lost some text.  Try typing  <return>  to proceed.\MessageBreak If that doesn't work, type  X <return>  to quit.}}{11}{Modos TM\relax }{equation.0.1.3\protect \begingroup \immediate \write \@unused   \def \MessageBreak  
+ \let \protect \edef  You've lost some text.  Try typing  <return>  to proceed.\MessageBreak If that doesn't work, type  X <return>  to quit.  \errhelp \let \def \MessageBreak  
+                \def   \errmessage  LaTeX Error: Counter too large.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help   \endgroup }{}}

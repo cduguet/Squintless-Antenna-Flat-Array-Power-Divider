@@ -1,0 +1,77 @@
+**Cristian Duguet Saez
+**Distribucion de Uniforme en 20 elementos.
+
+** Set the frequencies
+#f0=10e9         ** central frequency
+#f1=11.5e9         ** start frequency
+#f2=8.5e9         ** stop frequency
+#lambda=300e6/#f0  ** wavelength in metros
+#k=2*#pi/#lambda     **Shear wave number
+#np=9           ** number of points in the frequency range
+
+** Set  array parameters
+**Distance between elements
+#d=0.7*#lambda
+**Path difference (normal effect reduction)
+#delta=-#lambda*2/19   ** Control the phase distance between elements
+#beta=#delta*#k*180/#pi
+
+** End of geometry
+EG   1    0    0                                                                                    0
+
+** Set frequency range 
+FR   #np  0                   #f1                 #f2
+
+
+** Array Elements  
+LA   el1
+A5   0                        1         -19*#beta 0.5*#d    0         0         90        90
+A5   1                        1         -18*#beta 1.5*#d    0         0         90        90
+A5   1                        1         -17*#beta 2.5*#d    0         0         90        90
+A5   1                        1         -16*#beta 3.5*#d    0         0         90        90
+A5   1                        1         -15*#beta 4.5*#d    0         0         90        90
+A5   1                        1         -14*#beta 5.5*#d    0         0         90        90
+A5   1                        1         -13*#beta 6.5*#d    0         0         90        90
+A5   1                        1         -12*#beta 7.5*#d    0         0         90        90
+A5   1                        1         -11*#beta 8.5*#d    0         0         90        90
+A5   1                        1         -10*#beta 9.5*#d    0         0         90        90
+A5   1                        1         -9*#beta  10.5*#d   0         0         90        90
+A5   1                        1         -8*#beta  11.5*#d   0         0         90        90
+A5   1                        1         -7*#beta  12.5*#d   0         0         90        90
+A5   1                        1         -6*#beta  13.5*#d   0         0         90        90
+A5   1                        1         -5*#beta  14.5*#d   0         0         90        90
+A5   1                        1         -4*#beta  15.5*#d   0         0         90        90
+A5   1                        1         -3*#beta  16.5*#d   0         0         90        90
+A5   1                        1         -2*#beta  17.5*#d   0         0         90        90
+A5   1                        1         -1*#beta  18.5*#d   0         0         90        90
+A5   1                        1         -0*#beta  19.5*#d   0         0         90        90
+                                       
+                                        
+** ** Array Elements negative side      
+A5   1                        1         -19*#beta -0.5*#d   0         0         90        90
+A5   1                        1         -18*#beta -1.5*#d   0         0         90        90
+A5   1                        1         -17*#beta -2.5*#d   0         0         90        90
+A5   1                        1         -16*#beta -3.5*#d   0         0         90        90
+A5   1                        1         -15*#beta -4.5*#d   0         0         90        90
+A5   1                        1         -14*#beta -5.5*#d   0         0         90        90
+A5   1                        1         -13*#beta -6.5*#d   0         0         90        90
+A5   1                        1         -12*#beta -7.5*#d   0         0         90        90
+A5   1                        1         -11*#beta -8.5*#d   0         0         90        90
+A5   1                        1         -10*#beta -9.5*#d   0         0         90        90
+A5   1                        1         -9*#beta  -10.5*#d  0         0         90        90
+A5   1                        1         -8*#beta  -11.5*#d  0         0         90        90
+A5   1                        1         -7*#beta  -12.5*#d  0         0         90        90
+A5   1                        1         -6*#beta  -13.5*#d  0         0         90        90
+A5   1                        1         -5*#beta  -14.5*#d  0         0         90        90
+A5   1                        1         -4*#beta  -15.5*#d  0         0         90        90
+A5   1                        1         -3*#beta  -16.5*#d  0         0         90        90
+A5   1                        1         -2*#beta  -17.5*#d  0         0         90        90
+A5   1                        1         -1*#beta  -18.5*#d  0         0         90        90
+A5   1                        1         -0*#beta  -19.5*#d  0         0         90        90
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+
+** Calculation the far field 
+FF   1    361  8    1         0         0         0.25      45
+
+** End
+EN

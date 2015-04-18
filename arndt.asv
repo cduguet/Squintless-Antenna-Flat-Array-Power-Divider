@@ -1,0 +1,159 @@
+% Calculos de la división de potencia según algoritmo de Arndt
+clc
+clear all;
+close all;
+
+%B: salidas
+%A: entradas
+%ST: Scattering matrix of the symmetrical T-junction
+
+%----------------------------Constantes-----------------------------------%
+eps0=8.854187817e-12;
+mu0=4*pi*10^-7;
+
+%--------------------------Variables independientes-----------------------%
+%frecuencia, 10 GHz
+f=10e9;
+
+%Velocidad angular
+omega=2*pi*f;
+
+%ancho de la guía
+a=0.2; %metros
+
+%-------------------------------------------------------------------------%
+%Permeabilidades y Permitividades
+epsr=1 ; mur=1; 
+eps=eps0*epsr; 
+mu=mu0*mur;
+
+
+% Anchos de la guía de ondas
+% 
+%          |    |
+%          |bIII|
+% _________|    |__________
+%                 bII
+%      bI        __________
+% ______________|
+% 
+
+%Valores iniciales de b
+b(1)=10e-3; b(2)=7e-3;b(3)=3e-3; %3-element vector
+
+%------------ Trabajaremos con el modo TE_nx en I y TE_px en III ---------%
+%para cualquier x
+n=0; p=0;
+
+%Número de onda
+ksquare= omega^2*mu*eps; 
+k_x= pi/a
+k_q=n*pi./b; %3-element vector
+
+%constante de fase
+if omega^2*mu*eps >= (k_x^2 + k_q.^2)
+    beta = sqrt(omega^2*mu*eps - (k_x^2 + k_q.^2 ));
+else
+    beta = -i*sqrt(omega^2*mu*eps - (k_x^2 + k_q.^2 ));   % 3-element vector
+end
+
+%Impedancia
+ZF = omega*mu./beta; %3-element vector
+
+%Matriz de Admitancias
+Y=ZF.^(-0.5); %3-element vector
+
+%Matriz Diagonal e
+e=exp(i.*beta.*b); %3-element vector
+
+
+y1 = b(1)/2;
+z1 = b(3)/2;
+%Matriz T, elemento
+T(1) = 1/sqrt(y1*z1) * sin(beta(1)*2*z1)/sin(beta(3)*2*z1) * beta(1)/beta(3) * 1/sqrt(1+isequal(n,0)) *  1/sqrt(1+isequal(p,0)); %% me salta una duda, es beta(3)*2*z1?? o *y1???
+%multiplicado por la integral
+T(1)=T(1) * ((n*pi/2/y1)*sin(n*pi) - beta(3)*sin(beta(3)*2*y1)) / ((n*pi/2/y1)^2 - (beta(3))^2);
+
+%Matriz T, segundo elemento
+T(2) = T(1)*(-1)^p;  %% me salta una duda, es elevado a p o a n?
+
+%Matriz T, tercer elemento
+T(3) = 1/sqrt(y1*z1) * sin(beta(3)*2*y1)/sin(beta(1)*2*z1) * beta(3)/beta(1) * 1/sqrt(1+isequal(n,0)) *  1/sqrt(1+isequal(p,0));
+%multiplicado por la integral
+T(3)=T(3) * ((p*pi/2/z1)*sin(p*pi) - beta(1)*sin(beta(1)*2*z1)) / ((p*pi/2/z1)^2 - (beta(1))^2);
+
+%Matriz T, cuarto elemento
+T(4) = T(3) * (-1)^p; %% me salta una duda, es elevado a p o a n?
+
+%Matriz de la juntura T sim�trica
+ST= [ -e(1)*Y(1)    Y(1)    -T(1)* Y(3);
+        Y(1)    -e(1)*Y(1)   T(2)* Y(3);
+      -T(3)*Y(1) T(4)*Y(1)   -e(3)*Y(3)];
+ST = inv(ST) * [ (1/e(1))*Y(1)       -Y(1)          T(1)* Y(3);
+                     -Y(1)       (1/e(1))*Y(1)     -T(2)* Y(3);
+                   T(3)*Y(1)      -T(4)*Y(1)     (1/e(3))*Y(3)];
+
+
+%-------------------------------------------------------------------------%
+%Ahora creamos la matriz SH:
+%---------- Trabajaremos con el modo TE_xm en IIa y TE_xn en V -----------%
+%para cualquier x
+m=0; n=0;
+%dependiente de b(i+1)
+K1 = 1/sqrt(1+isequal(m,0)) *  1/sqrt(1+isequal(n,0)) * 2/sqrt((2*y1)*(b(2)))
+
+%por la integral
+K1=K1 * b(2);
+% K1=K1 * ( (m*pi/b(1))*sin(m*pi)*cos(n*pi) - (n*pi/b(2))*sin(n*pi)*cos(m*pi) - (m*pi/b(1))*sin(m*pi*b(2)/b(1)) ) / ( (m*pi/b(1))^2 - (n*pi/b(2))^2 );
+
+K2=K1; %transposed
+%solo 1 modo
+
+%matrices diagonales sqrtY 
+%dado que los la constante de fase es igual en IIa con I,  y en V con II:
+sqrtYm = Y(2);
+sqrtYn = Y(1);
+
+betam=beta(2);
+betan=beta(1);
+
+%-----------------------------%
+SH=zeros(2,2);
+SH(1,1) =          ( sqrtYm * betam^(-1) * (K1*sqrtYm)^(-1) * sqrtYm +  K2 * betan^(-1) *sqrtYn )^(-1);
+SH(1,1) = SH(1,1) *(-sqrtYm * betam^(-1) * (K1*sqrtYm)^(-1) * sqrtYm +  K2 * betan^(-1) *sqrtYn );
+
+SH(1,2) =        2*( sqrtYm * betam^(-1) * (K1*sqrtYm)^(-1) * sqrtYm +  K2 * betan^(-1) *sqrtYn )^(-1) * sqrtYm * betam^(-1);
+
+SH(2,1) = 2*(  K1*sqrtYm  +  sqrtYn *(K2 * betan^(-1) *sqrtYn )^(-1) * sqrtYm *betam^(-1)  )^(-1) * sqrtYn;
+
+SH(2,2) =          (  K1*sqrtYm  +  sqrtYn *(K2 * betan^(-1) *sqrtYn )^(-1) * sqrtYm *betam^(-1)  )^(-1);
+SH(2,2) = SH(2,2) *( -K1*sqrtYm  +  sqrtYn *(K2 * betan^(-1) *sqrtYn )^(-1) * sqrtYm *betam^(-1)  );
+
+%------------------------------%
+
+M1 = (ones(1) - ST(2,2)* SH(1,1))^(-1);
+M2 = SH(1,1)*M1;
+M3 = SH(2,1)*M1;
+M4 = ST(2,2)*SH(1,2);
+
+
+%-------------------------------%
+SUT(1,1) = ST(1,1) + ST(1,2)*M2*ST(2,1);
+SUT(1,2) = ST(1,2)*SH(1,2) + ST(1,2)*M2*M4;
+SUT(1,3) = ST(1,3) + ST(1,2)*M2*ST(2,3);
+SUT(2,1) = M3*ST(2,1);
+SUT(2,2) = SH(2,2) +M3*M4;
+SUT(2,3) = M3*ST(2,3);
+SUT(3,1) = ST(3,1) + ST(3,2)*M2*ST(2,1);
+SUT(3,2) = ST(3,2)*SH(1,2) + ST(3,2)*M2*M4;
+SUT(3,3) = ST(3,3) + ST(3,2)*M2*ST(2,3);
+
+%---------------comprobar impedancia
+% 
+% f=1e10
+% eta=sqrt(mu/eps)
+% epsa=eps;
+% k=omega*sqrt(mu*epsa)
+% kc= sqrt(k^2 + gamma^2)
+% fc=kc/(2*pi*sqrt(mu*eps))
+% ZTE= eta /sqrt(1- (fc/f)^2)

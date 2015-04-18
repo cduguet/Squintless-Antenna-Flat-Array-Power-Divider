@@ -1,0 +1,1027 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>fit_test</title>
+      <meta name="generator" content="MATLAB 7.6">
+      <meta name="date" content="2008-07-22">
+      <meta name="m-file" content="fit_test"><style>
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head>
+   <body>
+      <div class="content"><pre class="codeinput"><span class="keyword">function</span> fit_test(which)
+<span class="comment">% This function tests the fit_nl and fit_nl_ex routines. Several fits in 1D-3D</span>
+<span class="comment">% with built-in functions or custom defined functions are performed.</span>
+<span class="comment">%</span>
+<span class="comment">% Syntax</span>
+<span class="comment">%   function fit_test()</span>
+<span class="comment">%   function fit_test(which)</span>
+<span class="comment">%</span>
+<span class="comment">% Input parameter</span>
+<span class="comment">%   which   which test 1-7 (or nothing for a menu)</span>
+
+<span class="keyword">if</span> nargin == 0
+
+    <span class="comment">% option which not given, print a menu</span>
+    which = 1;
+    <span class="keyword">while</span> which ~= 0
+        <span class="comment">% the menu</span>
+        fprintf(<span class="string">'Which test would You like to do?\n'</span>);
+        fprintf(<span class="string">' (1) Calling built-in function in fit_func()\n'</span>);
+        fprintf(<span class="string">' (2) 1D fit of noisy data with a Lorentzian function\n'</span>);
+        fprintf(<span class="string">' (3) 2D fit of noisy data with a custom defined function\n'</span>);
+        fprintf(<span class="string">' (4) 3D fit of noisy data with a Gaussian function\n'</span>);
+        fprintf(<span class="string">' (5) 1D fit of noisy data with 3 Lorentzian peaks\n'</span>);
+        fprintf(<span class="string">' (6) 2D fit of noisy data with 4 Gaussian peaks and complex side conditions\n'</span>);
+        fprintf(<span class="string">' (7) Runtime comparison of lsqcurvefit(), fmincon() and fminsearch()\n'</span>);
+        fprintf(<span class="string">' (Enter) Exit\n'</span>);
+        which = input(<span class="string">'Choose [Enter]:'</span>, <span class="string">'s'</span>);
+        <span class="keyword">if</span> isempty(which)
+            <span class="comment">% which is empty when enter was pressed</span>
+            which = 0;
+        <span class="keyword">else</span>
+            which = int32(str2double(which));
+            <span class="keyword">if</span> which &gt; 0 &amp;&amp; which &lt; 8
+                <span class="comment">% call the right test</span>
+                fit_test(which);
+            <span class="keyword">else</span>
+                <span class="comment">%  all other cases (not only Enter) we also exit</span>
+                which = 0;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+<span class="keyword">else</span>
+
+    <span class="comment">% according to which execute a test</span>
+    fprintf(<span class="string">'\n'</span>);
+    <span class="keyword">switch</span> which
+        <span class="keyword">case</span> 1
+            <span class="comment">% a test: Calling built-in functions in fit_func() ------------</span>
+
+            disp(<span class="string">'Calling built-in function in fit_func()'</span>);
+
+            <span class="comment">% x values run from - 1 to 5</span>
+            xdata.x = -1:0.1:5;
+
+            <span class="comment">% function parameter for function 1, a gaussian with amplitude</span>
+            <span class="comment">% 10, center at 0,5, FWHM 2 and background 0.1</span>
+            x = [0.1, 10, 0.5, 2];
+            <span class="comment">% compute it using a built-in function</span>
+            y1 = fit_func(<span class="string">'1d_gaussian'</span>, x, xdata);
+
+            <span class="comment">% using the same x-values we have the parameters for function</span>
+            <span class="comment">% 2, a sine with amplitude 4, cycle duration 3, start at -1</span>
+            <span class="comment">% and background of 3</span>
+            x = [3., 4., 3, -1];
+            y2 = fit_func(@custom_func_1dsine, x, xdata);
+
+            <span class="comment">% plot both in one graph</span>
+            figure;
+            hold <span class="string">on</span>;
+            plot(xdata.x, y1, <span class="string">'b'</span>);
+            plot(xdata.x, y2, <span class="string">'r'</span>);
+            title(<span class="string">'function data created by a call to fit\_func()'</span>);
+
+        <span class="keyword">case</span> 2
+            <span class="comment">% tests 2-4 use function fit_nl()</span>
+            <span class="comment">% a test: 1D fitting with a Lorentzian ------------------------</span>
+
+            disp(<span class="string">'1D fit of noisy data with a Lorentzian function'</span>);
+
+            <span class="comment">% prepare image and initial parameters</span>
+            xdata.x = 0.5:99.5; <span class="comment">% 100 x-values between 0 and 100</span>
+
+            <span class="comment">% the 1D Lorentzian model has 4 parameters: background,</span>
+            <span class="comment">% amplitude, center and FWHM</span>
+            x_true = [0.5, 20., 35., 10.];
+
+            <span class="comment">% left and right borders</span>
+            lb   = [0., 1., 0., 0.1];
+            ub   = [1., 100., 100., 20.];
+
+            <span class="comment">% calculate the function corresponding to x_true</span>
+            y_true = fit_func(<span class="string">'1d_lorentzian'</span>, x_true, xdata);
+
+            <span class="comment">% add gaussian noise to y_true to obtain y_meas</span>
+            y_meas = random(<span class="string">'Normal'</span>, y_true, 3); <span class="comment">% standard deviation = 3</span>
+
+            <span class="comment">% set reasonable start values for fitting parameters</span>
+            x0 = [0.1, 10., 50., 5.];
+
+            <span class="comment">% fit y_meas with start values x0 with a call to fit_nl</span>
+            <span class="comment">% parameter fixed (5th) is not set</span>
+            x_fit = fit_nl(<span class="string">'1d_lorentzian'</span>, x0, xdata, y_meas, [], lb, ub);
+
+            <span class="comment">% calculate y_fit corresponding to x_fit</span>
+            y_fit = fit_func(<span class="string">'1d_lorentzian'</span>, x_fit, xdata);
+
+            <span class="comment">% plot everything in a figure</span>
+            figure;
+            hold <span class="string">on</span>;
+            plot(xdata.x, y_true, <span class="string">'b'</span>);
+            plot(xdata.x, y_meas, <span class="string">'k'</span>);
+            plot(xdata.x, y_fit, <span class="string">'r'</span>);
+            ylim([-10 25]);
+            title(<span class="string">'test 1 - 1D fitting of a Lorentzian peak'</span>);
+            text(2, -8, <span class="string">'blue - original curve, black - noisy curve, red - fitted curve'</span>);
+
+            <span class="comment">% display parameters overview</span>
+            disp(<span class="string">'original parameters'</span>);
+            disp(x_true);
+            disp(<span class="string">'fitted parameters'</span>);
+            disp(x_fit);
+
+        <span class="keyword">case</span> 3
+            <span class="comment">% test 2D fitting of a sine with a custom curve ---------------</span>
+
+            <span class="comment">% Comment: Here we use a custom function and give two fields x</span>
+            <span class="comment">% and y in xdata so that the function knows on which grid in</span>
+            <span class="comment">% the R^2 (the 2D world) the function should be computed. x and</span>
+            <span class="comment">% y have the same size as the output and can be conveniently by</span>
+            <span class="comment">% created by a call to ndgrid(). However, every other way,</span>
+            <span class="comment">% where xdata is a string, a cell array or whatsever, which</span>
+            <span class="comment">% makes your function know whose x and y values (of the</span>
+            <span class="comment">% independent variables) to take is also okay.</span>
+
+            disp(<span class="string">'2D fit of noisy data with a custom defined function'</span>);
+
+            <span class="comment">% prepare xdata / computational grid</span>
+            [x, y]  = ndgrid(0.5:19.5, 0.5:19.5);
+            xdata.x = x;
+            xdata.y = y;
+            <span class="comment">% our custom function has 4 parameters (see custom_func_2dsine</span>
+            <span class="comment">% for a function expression)</span>
+
+            <span class="comment">% the true parameter</span>
+            x_true = [10., 0.1, 0.1, 0.2];
+
+            <span class="comment">% calculate the 2D function corresponding to x_true</span>
+            y_true = fit_func(@custom_func_2dsine, x_true, xdata);
+
+            <span class="comment">% add gaussian noise to y_true to obtain y_meas</span>
+            y_meas = random(<span class="string">'Normal'</span>, y_true, 6); <span class="comment">% standard deviation = 6</span>
+
+            <span class="comment">% set reasonable start values for fitting parameters</span>
+            x0 = [8., 0.12, 0.12, 0];
+
+            <span class="comment">% fit y_meas with start values x0 with a call to fit_nl</span>
+            <span class="comment">% parameter fixed, lb and ub are not set</span>
+            x_fit = fit_nl(@custom_func_2dsine, x0, xdata, y_meas);
+
+            <span class="comment">% calculate y_fit corresponding to x_fit</span>
+            y_fit = fit_func(@custom_func_2dsine, x_fit, xdata);
+
+            <span class="comment">% plot everything in a figure</span>
+            clims = [-100 220];
+            subplot2(2, 2, 1);
+            imagesc(y_true, clims);
+            title(<span class="string">'original image'</span>);
+            subplot2(2, 2, 2);
+            imagesc(y_meas, clims);
+            title(<span class="string">'noisy image'</span>);
+            subplot2(2, 2, 3);
+            imagesc(y_fit, clims);
+            title(<span class="string">'fitted image'</span>);
+            subplot2(2, 2, 4);
+            imagesc(y_true - y_fit, clims);
+            title(<span class="string">'difference original - fitted image'</span>);
+
+            <span class="comment">% display parameters overview</span>
+            disp(<span class="string">'original parameters'</span>);
+            disp(x_true);
+            disp(<span class="string">'fitted parameters'</span>);
+            disp(x_fit);
+
+        <span class="keyword">case</span> 4
+            <span class="comment">% test 3D fitting of a gaussian -------------------------------</span>
+
+            disp(<span class="string">'3D fit of noisy data with a Gaussian function'</span>);
+
+            <span class="comment">% prepare xdata / computational grid</span>
+            [x, y, z]  = ndgrid(0.5:19.5, 0.5:19.5, 0.5:19.5);
+            <span class="comment">% in all directions 20 points ranging vom 0.5 to 19.5</span>
+            xdata.x = x;
+            xdata.y = y;
+            xdata.z = z;
+
+            <span class="comment">% the 3D Gaussian function has 7 parameters (see fit_func.m)</span>
+
+            <span class="comment">% the true parameters</span>
+            x_true = [0.1, 50., 8., 11., 9., 2., 1.5, 3.];
+
+            <span class="comment">% calculate the 2D function corresponding to x_true</span>
+            y_true = fit_func(<span class="string">'3d_gaussian'</span>, x_true, xdata);
+
+            <span class="comment">% add gaussian noise to y_true to obtain y_meas</span>
+            y_meas = random(<span class="string">'Normal'</span>, y_true, 6); <span class="comment">% standard deviation = 6</span>
+
+            <span class="comment">% set reasonable start values for fitting parameters</span>
+            x0 = [0.5, 47., 7., 12., 8.5, 3., 1.8, 2.7];
+
+            <span class="comment">% the first parameter (background) shall be kept fixed</span>
+            fixed = [1, 0, 0, 0, 0, 0, 0, 0];
+
+            <span class="comment">% fit y_meas with start values x0 with a call to fit_nl</span>
+            <span class="comment">% parameter lb and ub are not set</span>
+            [x_fit resnorm] = fit_nl(<span class="string">'3d_gaussian'</span>, x0, xdata, y_meas, fixed);
+
+            <span class="comment">% calculate y_fit corresponding to x_fit</span>
+            y_fit = fit_func(<span class="string">'3d_gaussian'</span>, x_fit, xdata);
+
+            <span class="comment">% we do not plot (would need to be a 3D plot)</span>
+            fprintf(<span class="string">'3D fit completed with fixed parameter 1, residual norm is %.2f\n'</span>, resnorm);
+
+            <span class="comment">% display parameters overview</span>
+            disp(<span class="string">'original parameters'</span>);
+            disp(x_true);
+            disp(<span class="string">'initial guess for parameters'</span>);
+            disp(x0);
+            disp(<span class="string">'fitted parameters'</span>);
+            disp(x_fit);
+
+        <span class="keyword">case</span> 5
+            <span class="comment">% test 5 and 6 use function fit_nl_ex()</span>
+            <span class="comment">% test: 1D fit of 3 Lorentzian peaks --------------------------</span>
+
+            disp(<span class="string">'1D fit of noisy data with 3 Lorentzian peaks'</span>);
+
+            <span class="comment">% prepare xdata / computational grid</span>
+            xdata = [];
+            xdata.x  = 0.5:99.5;
+
+            <span class="comment">% Three 1D Lorentzian functions have 1+3*(2*1+1)=10 parameter</span>
+            <span class="comment">% (see fitfunc.m)</span>
+
+            <span class="comment">% the true parameters</span>
+            x_true = [0.1, 20., 20., 8., 10., 50., 5., 15., 70., 6.5];
+
+            <span class="comment">% calculate the 2D function corresponding to x_true</span>
+            y_true = fit_func(<span class="string">'1d_lorentzian'</span>, x_true, xdata);
+
+            <span class="comment">% add gaussian noise to y_true to obtain y_meas</span>
+            y_meas = random(<span class="string">'Normal'</span>, y_true, 3); <span class="comment">% standard deviation = 3</span>
+
+            <span class="comment">% set reasonable start values for fitting parameters</span>
+            x0 = [0.3, 18., 23., 7., 12., 55., 3., 17., 75., 4.5];
+
+            <span class="comment">% create options</span>
+            options.opt = optimset(<span class="string">'Display'</span>, <span class="string">'iter'</span>);
+
+            <span class="comment">% fit y_meas with start values x0 with a call to fit_nl_ex</span>
+            x_fit = fit_nl_ex(<span class="string">'1d_lorentzian'</span>, x0, xdata, y_meas, options);
+
+            <span class="comment">% since we did not do any special, the fit did exactly the same</span>
+            <span class="comment">% as with fit_nl, but this demonstrates only, that fmincon and</span>
+            <span class="comment">% lsqcurvefit relies on the same principles</span>
+
+            <span class="comment">% calculate y_fit corresponding to x_fit</span>
+            y_fit = fit_func(<span class="string">'1d_lorentzian'</span>, x_fit, xdata);
+
+            <span class="comment">% plot everything in a figure</span>
+            figure;
+            hold <span class="string">on</span>;
+            plot(xdata.x, y_true, <span class="string">'b'</span>);
+            plot(xdata.x, y_meas, <span class="string">'k'</span>);
+            plot(xdata.x, y_fit, <span class="string">'r'</span>);
+            ylim([-10 25]);
+            title(<span class="string">'test 5 - 1D fitting of 3 Lorentzian peaks'</span>);
+            text(2, -4, <span class="string">'blue - original curve, black - noisy curve, red - fitted curve'</span>);
+            text(2, -6, <span class="string">'watch the center peak which is sometimes not fitted correctly'</span>);
+            text(2, -8, <span class="string">'because of noise and a bad starting point'</span>);
+
+            <span class="comment">% display parameters overview</span>
+            disp(<span class="string">'original parameters'</span>);
+            disp(x_true);
+            disp(<span class="string">'fitted parameters'</span>);
+            disp(x_fit);
+
+        <span class="keyword">case</span> 6
+            <span class="comment">% test: 2D of 4 gaussian peaks --------------------------------</span>
+
+            disp(<span class="string">'2D fit of noisy data with 4 Gaussian peaks and complex side conditions'</span>);
+            <span class="comment">% now our showcase :)))</span>
+
+            <span class="comment">% prepare xdata / computational grid</span>
+            xdata = [];
+            [x, y] = ndgrid(0.5:99.5, 0.5:99.5);
+            xdata.x = x;
+            xdata.y = y;
+
+            <span class="comment">% 4 2D Gaussian functions have 1+4*(2*2+1)=21 parameter</span>
+            <span class="comment">% thats a lot (see fitfunc.m)</span>
+
+            <span class="comment">% the true parameters</span>
+            x_true = 0.1;   <span class="comment">% background</span>
+            x_true = [x_true, 20., 30., 30., 8., 10.];  <span class="comment">% first peak</span>
+            x_true = [x_true, 22., 70., 60., 6., 9.];   <span class="comment">% second peak</span>
+            x_true = [x_true, 26., 40., 70., 11., 7.];  <span class="comment">% third peak</span>
+            x_true = [x_true, 20., 80., 90., 8., 8.];   <span class="comment">% fourd peak</span>
+
+            <span class="comment">% calculate the 2D function corresponding to x_true</span>
+            y_true = fit_func(<span class="string">'2d_gaussian'</span>, x_true, xdata);
+
+            <span class="comment">% add gaussian noise to y_true to obtain y_meas</span>
+            y_meas = random(<span class="string">'Poisson'</span>, y_true); <span class="comment">% standard deviation = sqrt(mean)</span>
+
+            <span class="comment">% set reasonable start values for fitting parameters</span>
+            x0 = 0.3; <span class="comment">% background</span>
+            x0 = [x0, 15., 25., 35., 8.5, 8.5];     <span class="comment">% first peak</span>
+            x0 = [x0, 20., 65., 65., 8.5, 8.5];     <span class="comment">% second peak</span>
+            x0 = [x0, 30., 45., 65., 8.5, 8.5];     <span class="comment">% third peak</span>
+            x0 = [x0, 15., 75., 85., 8.5, 8.5];     <span class="comment">% fourd peak</span>
+
+            <span class="comment">% calculate the 2D function corresponding to x0</span>
+            y0 = fit_func(<span class="string">'2d_gaussian'</span>, x0, xdata);
+
+            <span class="comment">% create options</span>
+            options.lb = zeros(size(x0)); <span class="comment">% all parameters should be at least positive</span>
+            options.ub = zeros(size(x0)) + 100; <span class="comment">% and at most 100</span>
+            options.likelihood  = <span class="string">'Poisson'</span>;
+            options.penalty_fun = @penalty_fun;
+
+            <span class="comment">% fit y_meas with start values x0 with a call to fit_nl_ex</span>
+            fprintf(<span class="string">'Fitting in progress, please wait!'</span>);
+            x_fit = fit_nl_ex(<span class="string">'2d_gaussian'</span>, x0, xdata, y_meas, options);
+
+            <span class="comment">% compute image corresponding to x_fit</span>
+            y_fit = fit_func(<span class="string">'2d_gaussian'</span>, x_fit, xdata);
+
+            <span class="comment">% plot everything in a figure</span>
+            clims = [0 30];
+            subplot2(2, 2, 1);
+            imagesc(y_true, clims);
+            colormap(hot);
+            title(<span class="string">'original image'</span>);
+            subplot2(2, 2, 2);
+            imagesc(y_meas, clims);
+            title(<span class="string">'noisy image'</span>);
+            subplot2(2, 2, 3);
+            imagesc(y0, clims);
+            title(<span class="string">'initial guess image'</span>);
+            subplot2(2, 2, 4);
+            imagesc(y_fit, clims);
+            title(<span class="string">'fitted image'</span>);
+
+            <span class="comment">% display parameters overview</span>
+            fprintf(<span class="string">'parameters\n'</span>);
+            fprintf(<span class="string">'true\t initial\t fitted\n'</span>);
+            <span class="keyword">for</span> ki = 1:length(x_true)
+                fprintf(<span class="string">'%.1f\t %.1f\t %.1f\n'</span>, x_true(ki), x0(ki), x_fit(ki));
+            <span class="keyword">end</span>
+
+        <span class="keyword">case</span> 7
+            <span class="comment">% test: Runtime comparison lsqcurvefit/fmincon/fminsearch -----</span>
+
+            disp(<span class="string">'Measure running time for a simple example: 1D Gaussian peak'</span>);
+            <span class="comment">% prepare a simple example - a 1D gaussian peak</span>
+
+            <span class="comment">% All default options for maxIter, TolX, etc. should be the same</span>
+            <span class="comment">% for lsqcurvefit(), fmincon(), fminsearch()</span>
+            <span class="comment">% A good sign for this is that the reached residual values were</span>
+            <span class="comment">% the same in my case</span>
+
+            <span class="comment">% prepare image and initial parameters</span>
+            xdata.x = 0.5:99.5; <span class="comment">% 100 x-values between 0 and 100</span>
+
+            <span class="comment">% the 1D Gaussian model has 4 parameters: background,</span>
+            <span class="comment">% amplitude, center and FWHM</span>
+            x_true = [0.5, 20., 35., 10.];
+
+            <span class="comment">% calculate the function corresponding to x_true</span>
+            y_true = fit_func(<span class="string">'1d_gaussian'</span>, x_true, xdata);
+
+            <span class="comment">% to have more runs to add we create several noisy copies of</span>
+            <span class="comment">% our data and fit them all</span>
+            N = 100;
+            fprintf(<span class="string">'Performing %d fitting starts per functions.\n'</span>, N);
+
+            <span class="comment">% add gaussian noise to y_true to obtain y_meas</span>
+            y_true2 = repmat(y_true, N, 1);
+            y_meas2 = random(<span class="string">'Normal'</span>, y_true2, 3); <span class="comment">% standard deviation = 3</span>
+
+            <span class="comment">% set reasonable start values for fitting parameters</span>
+            x0 = [0.1, 15., 40., 8.];
+
+            <span class="comment">% call to lsqcurvefit via fit_nl</span>
+            fprintf(<span class="string">'Fitting via lsqcurvefit\n'</span>);
+            tic
+            r1 = 0;
+            <span class="keyword">for</span> ki = 1 : N
+                [x r] = fit_nl(<span class="string">'1d_gaussian'</span>, x0, xdata, y_meas2(ki, :));
+                r1 = r1 + r;
+            <span class="keyword">end</span>
+            r1 = r1 / N;
+            toc
+            fprintf(<span class="string">'Mean residual value (resnorm of lsqcurvefit) %.2f\n'</span>, r1);
+
+            <span class="comment">% call to fmincon via fit_nl_ex</span>
+            fprintf(<span class="string">'Fitting via fmincon\n'</span>);
+            tic
+            r2 = 0;
+            <span class="keyword">for</span> ki = 1 : N
+                [x r] = fit_nl_ex(<span class="string">'1d_gaussian'</span>, x0, xdata, y_meas2(ki, :));
+                r2 = r2 + r;
+            <span class="keyword">end</span>
+            r2 = r2 / N;
+            toc
+            fprintf(<span class="string">'Mean residual value (fval of fmincon) %.2f\n'</span>, r2);
+
+            <span class="comment">% call to fminsearch via fit_nl_ex</span>
+            options = [];
+            options.use_fmincon = <span class="string">'no'</span>;
+            fprintf(<span class="string">'Fitting via fminsearch\n'</span>);
+            tic
+            r3 = 0;
+            <span class="keyword">for</span> ki = 1 : N
+                [x r] = fit_nl_ex(<span class="string">'1d_gaussian'</span>, x0, xdata, y_meas2(ki, :), options);
+                r3 = r3 + r;
+            <span class="keyword">end</span>
+            r3 = r3 / N;
+            toc
+            fprintf(<span class="string">'Mean residual value (fval of fminsearch) %.2f\n'</span>, r3);
+
+        <span class="keyword">otherwise</span>
+            error(<span class="string">'Variable which out of range!'</span>);
+    <span class="keyword">end</span>
+    fprintf(<span class="string">'\n'</span>);
+
+<span class="keyword">end</span>
+
+<span class="comment">% local functions ---------------------------------------------------------</span>
+
+<span class="comment">% custom function for test 1</span>
+    <span class="keyword">function</span> y = custom_func_1dsine(x, xdata)
+        <span class="comment">% has 4 parameters and expects xdata.x to hold the x values</span>
+        <span class="comment">% form: p1 + p2 * sin(((x-p4)/p3)*2pi)</span>
+        y = zeros(size(xdata.x)) + x(1);
+        y = y + x(2) * sin((xdata.x - x(4)) / x(3) * 2 * pi);
+    <span class="keyword">end</span>
+
+<span class="comment">% custom function for test 3</span>
+    <span class="keyword">function</span> y = custom_func_2dsine(x, xdata)
+        <span class="comment">% is 2D (expects xdata.x and xdata.y)</span>
+        <span class="comment">% form: p1 * sin(p2 * x) * cos(p3 * y) + p4</span>
+        y = x(1) * sin(x(2) * xdata.x) * cos(x(3) * xdata.y) + x(4);
+    <span class="keyword">end</span>
+
+<span class="comment">% penalty function for test 6</span>
+    <span class="keyword">function</span> y = penalty_fun(x)
+        <span class="comment">% simply adds a quadratic penalty if amplitude of the 4 gaussian peaks</span>
+        <span class="comment">% is far away from 22, e.g. this would help against overfitting with</span>
+        <span class="comment">% darker (relative to true brightness) peaks if the number of peaks</span>
+        <span class="comment">% would be unknown, a weighting factor should be introduced</span>
+        <span class="comment">% additionally</span>
+        y = (x(2)-22)^2+(x(7)-22)^2+(x(12)-22)^2+(x(17)-22)^2;
+    <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Which test would You like to do?
+ (1) Calling built-in function in fit_func()
+ (2) 1D fit of noisy data with a Lorentzian function
+ (3) 2D fit of noisy data with a custom defined function
+ (4) 3D fit of noisy data with a Gaussian function
+ (5) 1D fit of noisy data with 3 Lorentzian peaks
+ (6) 2D fit of noisy data with 4 Gaussian peaks and complex side conditions
+ (7) Runtime comparison of lsqcurvefit(), fmincon() and fminsearch()
+ (Enter) Exit</pre><pre class="codeoutput">Error using ==&gt; input
+Cannot call INPUT from EVALC.
+
+Error in ==&gt; fit_test at 27
+        which = input('Choose [Enter]:', 's');
+
+</pre><p class="footer"><br>
+            Published with MATLAB&reg; 7.6<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+function fit_test(which)
+% This function tests the fit_nl and fit_nl_ex routines. Several fits in 1D-3D
+% with built-in functions or custom defined functions are performed.
+% 
+% Syntax
+%   function fit_test()
+%   function fit_test(which)
+%
+% Input parameter
+%   which   which test 1-7 (or nothing for a menu)
+
+if nargin == 0
+
+    % option which not given, print a menu
+    which = 1;
+    while which ~= 0
+        % the menu
+        fprintf('Which test would You like to do?\n');
+        fprintf(' (1) Calling built-in function in fit_func()\n');
+        fprintf(' (2) 1D fit of noisy data with a Lorentzian function\n');
+        fprintf(' (3) 2D fit of noisy data with a custom defined function\n');
+        fprintf(' (4) 3D fit of noisy data with a Gaussian function\n');
+        fprintf(' (5) 1D fit of noisy data with 3 Lorentzian peaks\n');
+        fprintf(' (6) 2D fit of noisy data with 4 Gaussian peaks and complex side conditions\n');
+        fprintf(' (7) Runtime comparison of lsqcurvefit(), fmincon() and fminsearch()\n');
+        fprintf(' (Enter) Exit\n');
+        which = input('Choose [Enter]:', 's');
+        if isempty(which)
+            % which is empty when enter was pressed
+            which = 0;
+        else
+            which = int32(str2double(which));
+            if which > 0 && which < 8
+                % call the right test
+                fit_test(which);
+            else
+                %  all other cases (not only Enter) we also exit
+                which = 0;
+            end
+        end
+    end
+else
+
+    % according to which execute a test
+    fprintf('\n');
+    switch which
+        case 1
+            % a test: Calling built-in functions in fit_func() REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+
+            disp('Calling built-in function in fit_func()');
+
+            % x values run from - 1 to 5
+            xdata.x = -1:0.1:5;
+
+            % function parameter for function 1, a gaussian with amplitude
+            % 10, center at 0,5, FWHM 2 and background 0.1
+            x = [0.1, 10, 0.5, 2];
+            % compute it using a built-in function
+            y1 = fit_func('1d_gaussian', x, xdata);
+
+            % using the same x-values we have the parameters for function
+            % 2, a sine with amplitude 4, cycle duration 3, start at -1
+            % and background of 3
+            x = [3., 4., 3, -1];
+            y2 = fit_func(@custom_func_1dsine, x, xdata);
+
+            % plot both in one graph
+            figure;
+            hold on;
+            plot(xdata.x, y1, 'b');
+            plot(xdata.x, y2, 'r');
+            title('function data created by a call to fit\_func()');
+
+        case 2
+            % tests 2-4 use function fit_nl()
+            % a test: 1D fitting with a Lorentzian REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+
+            disp('1D fit of noisy data with a Lorentzian function');
+
+            % prepare image and initial parameters
+            xdata.x = 0.5:99.5; % 100 x-values between 0 and 100
+
+            % the 1D Lorentzian model has 4 parameters: background,
+            % amplitude, center and FWHM
+            x_true = [0.5, 20., 35., 10.];
+
+            % left and right borders
+            lb   = [0., 1., 0., 0.1];
+            ub   = [1., 100., 100., 20.];
+
+            % calculate the function corresponding to x_true
+            y_true = fit_func('1d_lorentzian', x_true, xdata);
+
+            % add gaussian noise to y_true to obtain y_meas
+            y_meas = random('Normal', y_true, 3); % standard deviation = 3
+
+            % set reasonable start values for fitting parameters
+            x0 = [0.1, 10., 50., 5.];
+
+            % fit y_meas with start values x0 with a call to fit_nl
+            % parameter fixed (5th) is not set
+            x_fit = fit_nl('1d_lorentzian', x0, xdata, y_meas, [], lb, ub);
+
+            % calculate y_fit corresponding to x_fit
+            y_fit = fit_func('1d_lorentzian', x_fit, xdata);
+
+            % plot everything in a figure
+            figure;
+            hold on;
+            plot(xdata.x, y_true, 'b');
+            plot(xdata.x, y_meas, 'k');
+            plot(xdata.x, y_fit, 'r');
+            ylim([-10 25]);
+            title('test 1 - 1D fitting of a Lorentzian peak');
+            text(2, -8, 'blue - original curve, black - noisy curve, red - fitted curve');
+
+            % display parameters overview
+            disp('original parameters');
+            disp(x_true);
+            disp('fitted parameters');
+            disp(x_fit);
+
+        case 3
+            % test 2D fitting of a sine with a custom curve REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+
+            % Comment: Here we use a custom function and give two fields x
+            % and y in xdata so that the function knows on which grid in
+            % the R^2 (the 2D world) the function should be computed. x and
+            % y have the same size as the output and can be conveniently by
+            % created by a call to ndgrid(). However, every other way,
+            % where xdata is a string, a cell array or whatsever, which
+            % makes your function know whose x and y values (of the
+            % independent variables) to take is also okay.
+
+            disp('2D fit of noisy data with a custom defined function');
+
+            % prepare xdata / computational grid
+            [x, y]  = ndgrid(0.5:19.5, 0.5:19.5);
+            xdata.x = x;
+            xdata.y = y;
+            % our custom function has 4 parameters (see custom_func_2dsine
+            % for a function expression)
+
+            % the true parameter
+            x_true = [10., 0.1, 0.1, 0.2];
+
+            % calculate the 2D function corresponding to x_true
+            y_true = fit_func(@custom_func_2dsine, x_true, xdata);
+
+            % add gaussian noise to y_true to obtain y_meas
+            y_meas = random('Normal', y_true, 6); % standard deviation = 6
+
+            % set reasonable start values for fitting parameters
+            x0 = [8., 0.12, 0.12, 0];
+
+            % fit y_meas with start values x0 with a call to fit_nl
+            % parameter fixed, lb and ub are not set
+            x_fit = fit_nl(@custom_func_2dsine, x0, xdata, y_meas);
+
+            % calculate y_fit corresponding to x_fit
+            y_fit = fit_func(@custom_func_2dsine, x_fit, xdata);
+
+            % plot everything in a figure
+            clims = [-100 220];
+            subplot2(2, 2, 1);
+            imagesc(y_true, clims);
+            title('original image');
+            subplot2(2, 2, 2);
+            imagesc(y_meas, clims);
+            title('noisy image');
+            subplot2(2, 2, 3);
+            imagesc(y_fit, clims);
+            title('fitted image');
+            subplot2(2, 2, 4);
+            imagesc(y_true - y_fit, clims);
+            title('difference original - fitted image');
+
+            % display parameters overview
+            disp('original parameters');
+            disp(x_true);
+            disp('fitted parameters');
+            disp(x_fit);
+
+        case 4
+            % test 3D fitting of a gaussian REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+
+            disp('3D fit of noisy data with a Gaussian function');
+
+            % prepare xdata / computational grid
+            [x, y, z]  = ndgrid(0.5:19.5, 0.5:19.5, 0.5:19.5);
+            % in all directions 20 points ranging vom 0.5 to 19.5
+            xdata.x = x;
+            xdata.y = y;
+            xdata.z = z;
+
+            % the 3D Gaussian function has 7 parameters (see fit_func.m)
+
+            % the true parameters
+            x_true = [0.1, 50., 8., 11., 9., 2., 1.5, 3.];
+
+            % calculate the 2D function corresponding to x_true
+            y_true = fit_func('3d_gaussian', x_true, xdata);
+
+            % add gaussian noise to y_true to obtain y_meas
+            y_meas = random('Normal', y_true, 6); % standard deviation = 6
+
+            % set reasonable start values for fitting parameters
+            x0 = [0.5, 47., 7., 12., 8.5, 3., 1.8, 2.7];
+
+            % the first parameter (background) shall be kept fixed
+            fixed = [1, 0, 0, 0, 0, 0, 0, 0];
+
+            % fit y_meas with start values x0 with a call to fit_nl
+            % parameter lb and ub are not set
+            [x_fit resnorm] = fit_nl('3d_gaussian', x0, xdata, y_meas, fixed);
+
+            % calculate y_fit corresponding to x_fit
+            y_fit = fit_func('3d_gaussian', x_fit, xdata);
+
+            % we do not plot (would need to be a 3D plot)
+            fprintf('3D fit completed with fixed parameter 1, residual norm is %.2f\n', resnorm);
+
+            % display parameters overview
+            disp('original parameters');
+            disp(x_true);
+            disp('initial guess for parameters');
+            disp(x0);
+            disp('fitted parameters');
+            disp(x_fit);
+
+        case 5
+            % test 5 and 6 use function fit_nl_ex()
+            % test: 1D fit of 3 Lorentzian peaks REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+
+            disp('1D fit of noisy data with 3 Lorentzian peaks');
+
+            % prepare xdata / computational grid
+            xdata = [];
+            xdata.x  = 0.5:99.5;
+
+            % Three 1D Lorentzian functions have 1+3*(2*1+1)=10 parameter
+            % (see fitfunc.m)
+
+            % the true parameters
+            x_true = [0.1, 20., 20., 8., 10., 50., 5., 15., 70., 6.5];
+
+            % calculate the 2D function corresponding to x_true
+            y_true = fit_func('1d_lorentzian', x_true, xdata);
+
+            % add gaussian noise to y_true to obtain y_meas
+            y_meas = random('Normal', y_true, 3); % standard deviation = 3
+
+            % set reasonable start values for fitting parameters
+            x0 = [0.3, 18., 23., 7., 12., 55., 3., 17., 75., 4.5];
+
+            % create options
+            options.opt = optimset('Display', 'iter');
+
+            % fit y_meas with start values x0 with a call to fit_nl_ex
+            x_fit = fit_nl_ex('1d_lorentzian', x0, xdata, y_meas, options);
+
+            % since we did not do any special, the fit did exactly the same
+            % as with fit_nl, but this demonstrates only, that fmincon and
+            % lsqcurvefit relies on the same principles
+
+            % calculate y_fit corresponding to x_fit
+            y_fit = fit_func('1d_lorentzian', x_fit, xdata);
+
+            % plot everything in a figure
+            figure;
+            hold on;
+            plot(xdata.x, y_true, 'b');
+            plot(xdata.x, y_meas, 'k');
+            plot(xdata.x, y_fit, 'r');
+            ylim([-10 25]);
+            title('test 5 - 1D fitting of 3 Lorentzian peaks');
+            text(2, -4, 'blue - original curve, black - noisy curve, red - fitted curve');
+            text(2, -6, 'watch the center peak which is sometimes not fitted correctly');
+            text(2, -8, 'because of noise and a bad starting point');
+
+            % display parameters overview
+            disp('original parameters');
+            disp(x_true);
+            disp('fitted parameters');
+            disp(x_fit);
+
+        case 6
+            % test: 2D of 4 gaussian peaks REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+
+            disp('2D fit of noisy data with 4 Gaussian peaks and complex side conditions');
+            % now our showcase :)))
+
+            % prepare xdata / computational grid
+            xdata = [];
+            [x, y] = ndgrid(0.5:99.5, 0.5:99.5);
+            xdata.x = x;
+            xdata.y = y;
+
+            % 4 2D Gaussian functions have 1+4*(2*2+1)=21 parameter
+            % thats a lot (see fitfunc.m)
+
+            % the true parameters
+            x_true = 0.1;   % background
+            x_true = [x_true, 20., 30., 30., 8., 10.];  % first peak
+            x_true = [x_true, 22., 70., 60., 6., 9.];   % second peak
+            x_true = [x_true, 26., 40., 70., 11., 7.];  % third peak
+            x_true = [x_true, 20., 80., 90., 8., 8.];   % fourd peak
+
+            % calculate the 2D function corresponding to x_true
+            y_true = fit_func('2d_gaussian', x_true, xdata);
+
+            % add gaussian noise to y_true to obtain y_meas
+            y_meas = random('Poisson', y_true); % standard deviation = sqrt(mean)
+
+            % set reasonable start values for fitting parameters
+            x0 = 0.3; % background
+            x0 = [x0, 15., 25., 35., 8.5, 8.5];     % first peak
+            x0 = [x0, 20., 65., 65., 8.5, 8.5];     % second peak
+            x0 = [x0, 30., 45., 65., 8.5, 8.5];     % third peak
+            x0 = [x0, 15., 75., 85., 8.5, 8.5];     % fourd peak
+
+            % calculate the 2D function corresponding to x0
+            y0 = fit_func('2d_gaussian', x0, xdata);
+
+            % create options
+            options.lb = zeros(size(x0)); % all parameters should be at least positive
+            options.ub = zeros(size(x0)) + 100; % and at most 100
+            options.likelihood  = 'Poisson';
+            options.penalty_fun = @penalty_fun;
+
+            % fit y_meas with start values x0 with a call to fit_nl_ex
+            fprintf('Fitting in progress, please wait!');
+            x_fit = fit_nl_ex('2d_gaussian', x0, xdata, y_meas, options);
+
+            % compute image corresponding to x_fit
+            y_fit = fit_func('2d_gaussian', x_fit, xdata);
+
+            % plot everything in a figure
+            clims = [0 30];
+            subplot2(2, 2, 1);
+            imagesc(y_true, clims);
+            colormap(hot);
+            title('original image');
+            subplot2(2, 2, 2);
+            imagesc(y_meas, clims);
+            title('noisy image');
+            subplot2(2, 2, 3);
+            imagesc(y0, clims);
+            title('initial guess image');
+            subplot2(2, 2, 4);
+            imagesc(y_fit, clims);
+            title('fitted image');
+
+            % display parameters overview
+            fprintf('parameters\n');
+            fprintf('true\t initial\t fitted\n');
+            for ki = 1:length(x_true)
+                fprintf('%.1f\t %.1f\t %.1f\n', x_true(ki), x0(ki), x_fit(ki));
+            end
+
+        case 7
+            % test: Runtime comparison lsqcurvefit/fmincon/fminsearch REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+
+            disp('Measure running time for a simple example: 1D Gaussian peak');
+            % prepare a simple example - a 1D gaussian peak
+            
+            % All default options for maxIter, TolX, etc. should be the same
+            % for lsqcurvefit(), fmincon(), fminsearch()
+            % A good sign for this is that the reached residual values were
+            % the same in my case
+
+            % prepare image and initial parameters
+            xdata.x = 0.5:99.5; % 100 x-values between 0 and 100
+
+            % the 1D Gaussian model has 4 parameters: background,
+            % amplitude, center and FWHM
+            x_true = [0.5, 20., 35., 10.];
+
+            % calculate the function corresponding to x_true
+            y_true = fit_func('1d_gaussian', x_true, xdata);
+
+            % to have more runs to add we create several noisy copies of
+            % our data and fit them all
+            N = 100;
+            fprintf('Performing %d fitting starts per functions.\n', N);
+
+            % add gaussian noise to y_true to obtain y_meas
+            y_true2 = repmat(y_true, N, 1);
+            y_meas2 = random('Normal', y_true2, 3); % standard deviation = 3
+
+            % set reasonable start values for fitting parameters
+            x0 = [0.1, 15., 40., 8.];
+
+            % call to lsqcurvefit via fit_nl
+            fprintf('Fitting via lsqcurvefit\n');
+            tic
+            r1 = 0;
+            for ki = 1 : N
+                [x r] = fit_nl('1d_gaussian', x0, xdata, y_meas2(ki, :));
+                r1 = r1 + r;
+            end
+            r1 = r1 / N;
+            toc
+            fprintf('Mean residual value (resnorm of lsqcurvefit) %.2f\n', r1);
+
+            % call to fmincon via fit_nl_ex
+            fprintf('Fitting via fmincon\n');
+            tic
+            r2 = 0;
+            for ki = 1 : N
+                [x r] = fit_nl_ex('1d_gaussian', x0, xdata, y_meas2(ki, :));
+                r2 = r2 + r;
+            end
+            r2 = r2 / N;
+            toc
+            fprintf('Mean residual value (fval of fmincon) %.2f\n', r2);
+
+            % call to fminsearch via fit_nl_ex
+            options = [];
+            options.use_fmincon = 'no';
+            fprintf('Fitting via fminsearch\n');
+            tic
+            r3 = 0;
+            for ki = 1 : N
+                [x r] = fit_nl_ex('1d_gaussian', x0, xdata, y_meas2(ki, :), options);
+                r3 = r3 + r;
+            end
+            r3 = r3 / N;
+            toc
+            fprintf('Mean residual value (fval of fminsearch) %.2f\n', r3);
+
+        otherwise
+            error('Variable which out of range!');
+    end
+    fprintf('\n');
+
+end
+
+% local functions REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+
+% custom function for test 1
+    function y = custom_func_1dsine(x, xdata)
+        % has 4 parameters and expects xdata.x to hold the x values
+        % form: p1 + p2 * sin(((x-p4)/p3)*2pi)
+        y = zeros(size(xdata.x)) + x(1);
+        y = y + x(2) * sin((xdata.x - x(4)) / x(3) * 2 * pi);
+    end
+
+% custom function for test 3
+    function y = custom_func_2dsine(x, xdata)
+        % is 2D (expects xdata.x and xdata.y)
+        % form: p1 * sin(p2 * x) * cos(p3 * y) + p4
+        y = x(1) * sin(x(2) * xdata.x) * cos(x(3) * xdata.y) + x(4);
+    end
+
+% penalty function for test 6
+    function y = penalty_fun(x)
+        % simply adds a quadratic penalty if amplitude of the 4 gaussian peaks
+        % is far away from 22, e.g. this would help against overfitting with
+        % darker (relative to true brightness) peaks if the number of peaks
+        % would be unknown, a weighting factor should be introduced
+        % additionally
+        y = (x(2)-22)^2+(x(7)-22)^2+(x(12)-22)^2+(x(17)-22)^2;
+    end
+
+end
+##### SOURCE END #####
+-->
+   </body>
+</html>
